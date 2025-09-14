@@ -1,16 +1,34 @@
 from rest_framework import serializers
-from .models import Review
+from .models import Review, ReviewStatus
 
 class ReviewSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
+    status = serializers.CharField(source="get_status_display", read_only=True)
+    user_email = serializers.EmailField(source="user.email", read_only=True)
 
     class Meta:
         model = Review
-        fields = ('id','place','user','user_email','rating','comment','is_approved','created_at')
-        read_only_fields = ('user','is_approved','created_at')
+        fields = ("id", "place", "rating", "comment", "status", "user_email", "created_at")
+        read_only_fields = ("id", "status", "user_email", "created_at")
+
+    def validate(self, attrs):
+        # Không cho client tự set status
+        if "status" in self.initial_data:
+            raise serializers.ValidationError({"status": "Không được set trạng thái duyệt."})
+        # Mỗi user 1 review/địa điểm
+        request = self.context.get("request")
+        if request and request.method == "POST":
+            place = attrs.get("place")
+            if place and Review.objects.filter(user=request.user, place=place).exists():
+                raise serializers.ValidationError({"non_field_errors": ["Bạn đã đánh giá địa điểm này rồi."]})
+        return attrs
 
     def create(self, validated_data):
-        request = self.context.get('request')
-        if request and request.user and request.user.is_authenticated:
-            validated_data['user'] = request.user
-        return super().create(validated_data)
+        request = self.context["request"]
+        return Review.objects.create(user=request.user, status=ReviewStatus.PENDING, **validated_data)
+
+class ReviewModerationSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=ReviewStatus.choices)
+
+    class Meta:
+        model = Review
+        fields = ("status",)

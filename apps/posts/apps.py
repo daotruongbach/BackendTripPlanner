@@ -1,3 +1,4 @@
+# apps/posts/apps.py
 from django.apps import AppConfig
 
 class PostsConfig(AppConfig):
@@ -5,4 +6,5 @@ class PostsConfig(AppConfig):
     name = "apps.posts"
 
     def ready(self):
-        from . import signals  # noqa
+        # nạp signal khi app khởi động
+        from . import signals  # noqa: F401

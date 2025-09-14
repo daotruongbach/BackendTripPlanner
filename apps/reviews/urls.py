@@ -1,7 +1,8 @@
-# urls.py
-from rest_framework.routers import DefaultRouter
-from .views import ReviewViewSet
+from django.urls import path
+from .views import ReviewListCreateView, ReviewDetailView, ReviewModerateView
 
-router = DefaultRouter()
-router.register('', ReviewViewSet, basename='review')
-urlpatterns = router.urls
+urlpatterns = [
+    path("", ReviewListCreateView.as_view()),                 # GET list, POST create
+    path("<int:pk>/", ReviewDetailView.as_view()),            # GET detail, DELETE
+    path("<int:pk>/moderate/", ReviewModerateView.as_view()), # POST approve/reject
+]

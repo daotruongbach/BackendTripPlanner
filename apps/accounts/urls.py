@@ -1,20 +1,25 @@
-# apps/accounts/urls.py
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     RegisterView, MeView, ChangePasswordView,
     PasswordResetRequestView, PasswordResetConfirmView,
+    EmailTokenObtainPairView,
+    AdminCreateUserView, SetRoleView,
 )
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 urlpatterns = [
-    path("register/", RegisterView.as_view(), name="auth-register"),
-    path("login/", TokenObtainPairView.as_view(), name="auth-login"),  # nhận 'email' + 'password'
-    path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("register/", RegisterView.as_view()),
+    path("me/", MeView.as_view()),
+    path("change-password/", ChangePasswordView.as_view()),
+    path("password-reset-request/", PasswordResetRequestView.as_view()),
+    path("password-reset-confirm/", PasswordResetConfirmView.as_view()),
+
+    # JWT
+    path("token/", EmailTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("token/verify/", TokenVerifyView.as_view(), name="token_verify"),
 
-    path("me/", MeView.as_view(), name="auth-me"),
-    path("change-password/", ChangePasswordView.as_view(), name="auth-change-password"),
-
-    path("password-reset/", PasswordResetRequestView.as_view(), name="auth-password-reset"),
-    path("password-reset-confirm/", PasswordResetConfirmView.as_view(), name="auth-password-reset-confirm"),
+    # Admin quản lý user
+    path("admin/create-user/", AdminCreateUserView.as_view()),
+    path("admin/set-role/<int:user_id>/", SetRoleView.as_view()),
 ]
