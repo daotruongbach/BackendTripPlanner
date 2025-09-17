@@ -5,7 +5,6 @@ from django.urls import reverse_lazy
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.urls import path
 from apps.reco.views import PlaceRecommendView, MeStatsView
 
 urlpatterns = [
@@ -23,11 +22,12 @@ urlpatterns = [
     # Các app khác
     path("api/places/", include("apps.places.urls")),
     path("api/reviews/", include("apps.reviews.urls")),
-    path("api/itineraries/", include("apps.itineraries.urls")),
+    path("api/itineraries/", include(("apps.itineraries.urls", "itineraries"), namespace="itineraries")),
     path("api/", include("apps.posts.urls")),   # router của posts
 
     path("api/reco/places/", PlaceRecommendView.as_view(), name="reco-places"),
     path("api/me/stats/", MeStatsView.as_view(), name="me-stats"),
+
 ]
 
 # Phục vụ media/static ở môi trường dev

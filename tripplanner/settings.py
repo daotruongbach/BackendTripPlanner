@@ -1,12 +1,15 @@
 from pathlib import Path
 from datetime import timedelta
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ===== Core =====
 SECRET_KEY = "dev-secret-change-me"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
+# ===== Apps =====
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -15,23 +18,22 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Bên thứ 3
+    # 3rd-party
     "rest_framework",
     "corsheaders",
     "django_filters",
 
-    # App
+    # Local apps
     "apps.accounts",
     "apps.places",
     "apps.reviews.apps.ReviewsConfig",
     "apps.itineraries",
     "apps.posts",
-
-    "apps.reco"
+    "apps.reco",
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",              # CORS nên đứng trên CommonMiddleware
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -61,20 +63,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "tripplanner.wsgi.application"
 
-# ===== Database (MySQL) =====
+# ===== Database (MySQL dev) =====
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "csdl_tripplanner",
         "USER": "root",
-        "PASSWORD": "1234",
+        "PASSWORD": "1234",          # <-- đổi theo máy bạn
         "HOST": "127.0.0.1",
         "PORT": "3306",
         "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 
-# ===== User model =====
+# ===== Auth =====
 AUTH_USER_MODEL = "accounts.User"
 
 # ===== DRF & JWT =====
@@ -90,7 +92,6 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 6,
-    # Hỗ trợ upload multipart cho API (bài viết có ảnh)
     "DEFAULT_PARSER_CLASSES": (
         "rest_framework.parsers.JSONParser",
         "rest_framework.parsers.FormParser",
@@ -114,9 +115,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ===== Static & Media =====
 STATIC_URL = "/static/"
-# Nếu deploy cần collectstatic, có thể đặt STATIC_ROOT:
-# STATIC_ROOT = BASE_DIR / "staticfiles"
-
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -130,22 +128,40 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# ===== Email (dev) =====
+# ===== Email dev =====
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@tripplanner.local"
 
-# ===== Goong =====
+# ===== Goong (distance) =====
 GOONG_API_KEY = "YfI57M128gfgDdjVFONP2Y8XQbqcv2Nqqv4mdMVe"
 GOONG_DISTANCE_URL = "https://rsapi.goong.io/DistanceMatrix"
 
-# ===== Ước tính chi phí vận chuyển (VND & km/h) =====
+# ===== Transport profiles (ước tính chi phí) =====
 TRANSPORT_PROFILES = {
     "taxi": {"base": 10000, "per_km": 14000, "speed_kmh": 25},
     "bike": {"base": 3000,  "per_km": 7000,  "speed_kmh": 22},
     "walk": {"base": 0,     "per_km": 0,     "speed_kmh": 4.5},
 }
 
+# ===== Recommendation (gợi ý địa điểm) =====
 RECO_WEIGHTS = {"w_cat": 2.0, "w_rate": 1.0, "w_dist": -0.3, "w_weather": 1.0}
 RECO_ALWAYS_EXCLUDE = ["FOOD", "DRINK"]
+
+# ===== OpenWeather =====
 OPENWEATHER_API_KEY = "6230587d2afe770f5549313b4465cf9c"
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "tripplanner-local-cache"}}
+
+# ===== Cache local =====
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "tripplanner-local-cache",
+    }
+}
+
+# ===== VNPay (Sandbox) — KHÔNG dùng .env =====
+VNPAY_VERSION      = "2.1.0"
+VNPAY_TMN_CODE     = "F73OB93A"  # từ email sandbox
+VNPAY_HASH_SECRET  = "7Y1CE4O2JSU7NVUSLJEVXJUS5I5T0JPW"  # từ email sandbox
+VNPAY_PAYMENT_URL  = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+VNPAY_RETURN_URL = "http://127.0.0.1:8000/api/itineraries/payments/vnpay/return/"
+VNPAY_IPN_URL    = "http://127.0.0.1:8000/api/itineraries/payments/vnpay/ipn/"
